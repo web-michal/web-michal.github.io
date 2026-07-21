@@ -71,7 +71,7 @@ html,body{
     color:#000;
 }
 
-#login select:valid option[value=""]{
+#login select:not([value=""]), #login select:valid{
     color: #555 !important;
 }
 
@@ -130,7 +130,7 @@ html,body{
 <div id="login">
     <input id="username" type="text" placeholder="login">
     <input id="password" type="password" placeholder="hasło">
-    <select id="deviceSelect"><option value="">wybierz urządzenie</option></select>
+    <select id="deviceSelect" required><option value="">wybierz urządzenie</option></select>
     <button id="connectButton" onclick="connectMQTT()" disabled>P O Ł Ą C Z</button>
     <div id="connectionStatus"></div>
 </div>
