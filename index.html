@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Terminal</title>
+
+<script src="mqtt.js"></script>
+<script src="devices.js"></script>
+
+<style>
+html,body{
+    margin:0;
+    height:100%;
+    background:#000;
+    color:#fff;
+    font-family:monospace;
+}
+
+#login{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%, -50%);
+    width:300px;
+    box-sizing:border-box;
+    padding:20px;
+    background:#111;
+    border:1px solid #333;
+    border-radius:10px;
+}
+
+#login input{
+    width:100%;
+    height:35px;
+    margin:10px 0;
+    box-sizing:border-box;
+    background:#111;
+    color:#fff;
+    border:1px solid #333;
+    outline:none;
+    padding:0 10px;
+    font-size:16px;
+}
+
+#login select{
+    width:100%;
+    height:35px;
+    margin:10px 0;
+    box-sizing:border-box;
+    background-color:#111;
+    color:#fff;
+    border:1px solid #333;
+    outline:none;
+    padding:0 10px;
+    font-size:16px;
+    appearance:none;
+    -webkit-appearance:none;
+    -moz-appearance:none;
+}
+
+#login select option{
+    background-color:#111;
+    color:#fff;
+}
+
+#login button{
+    width:100%;
+    height:35px;
+    margin-top:20px;
+    outline:none;
+}
+
+#connectionStatus{
+    margin-top:10px;
+    min-height:25px;
+    color:#ff4040;
+    font-size:12px;
+    font-weight:bold;
+    text-align:center;
+}
+
+#terminal{
+    height:calc(100% - 55px);
+    overflow:auto;
+    padding:10px;
+    box-sizing:border-box;
+    white-space:pre-wrap;
+    display:none;
+}
+
+#commandInput{
+    width:100%;
+    height:55px;
+    box-sizing:border-box;
+    background:#111;
+    color:#fff;
+    border:1px solid #333;
+    outline:none;
+    padding:0 20px;
+    font-size:18px;
+    display:none;
+}
+</style>
+
+</head>
+
+<body>
+
+<div id="login">
+    <input id="username" type="text" placeholder="login">
+    <input id="password" type="password" placeholder="hasło">
+    <select id="deviceSelect"><option value="">wybierz urządzenie</option></select>
+    <button id="connectButton" onclick="connectMQTT()" disabled>P O Ł Ą C Z</button>
+    <div id="connectionStatus"></div>
+</div>
+
+<div id="terminal"></div>
+
+<input id="commandInput" placeholder="wpisz polecenie i zatwierdź klawiszem ENTER ...">
+
+
+<script>
+// ========== MQTT Server - Websocket URL ========== //
+const MQTT_SERVER = "wss://5be1c7927e2b41159c0a489a411bd419.s1.eu.hivemq.cloud:8884/mqtt";
+
+const login = document.getElementById("login");
+const username = document.getElementById("username");
+const password = document.getElementById("password");
+const deviceSelect = document.getElementById("deviceSelect");
+const connectButton = document.getElementById("connectButton");
+const connectionStatus = document.getElementById("connectionStatus");
+const terminal = document.getElementById("terminal");
+const commandInput = document.getElementById("commandInput");
+const LINE_END = "\r\n";
+
+let TOPIC_PUBLISH = "";
+let TOPIC_SUBSCRIBE = "";
+let DEVICE_NAME = "";
+let CLIENT_ID = "";
+let client;
+let connected = false;
+
+
+function print(text)
+{
+    terminal.insertAdjacentText("beforeend", text);
+
+    if(terminal.textContent.length > 50000)
+    {
+        terminal.textContent = terminal.textContent.slice(-25000);
+    }
+
+    terminal.scrollTop = terminal.scrollHeight;
+}
+
+
+function printInfo(text)
+{
+    terminal.insertAdjacentHTML("beforeend", "<b>" + text + "</b>");
+}
+
+
+function checkLoginFields()
+{
+    connectButton.disabled = !(username.value && password.value && deviceSelect.value !== "");
+}
+
+
+function connectMQTT()
+{
+    if(!CLIENT_ID || !TOPIC_PUBLISH || !TOPIC_SUBSCRIBE)
+    {
+        connectionStatus.textContent = "WYBIERZ URZĄDZENIE!";
+        return;
+    }
+
+    connected = false;
+
+    connectionStatus.textContent = "";
+
+    if(client)
+    {
+        client.end();
+    }
+
+    client = mqtt.connect(
+        MQTT_SERVER,
+        {
+            username: username.value,
+            password: password.value,
+            clientId: CLIENT_ID,
+            clean: true,
+            reconnectPeriod: 0
+        }
+    );
+
+
+    client.on("connect", function()
+    {
+        connected = true;
+
+        login.style.display = "none";
+        terminal.style.display = "block";
+        commandInput.style.display = "block";
+        commandInput.focus();
+
+        printInfo("\n" + DEVICE_NAME + "\n[POŁĄCZONO Z SERWEREM]\n");
+
+        client.subscribe(
+            TOPIC_SUBSCRIBE,
+            { qos: 2 },
+            function(error)
+            {
+                if(error)
+                {
+                    printInfo("\n[NIE MOŻNA ODBIERAĆ DANYCH]\n");
+                }
+            }
+        );
+    });
+
+
+    client.on("error", function(error)
+    {
+        if(connected)
+        {
+            printInfo("\n[BŁĄD] " + error.message + "\n");
+        }
+        else
+        {
+            connectionStatus.textContent = "LOGOWANIE NIE POWIODŁO SIĘ!";
+        }
+    });
+
+
+    client.on("close", function()
+    {
+        connected = false;
+
+        terminal.style.display = "none";
+        commandInput.style.display = "none";
+
+        login.style.display = "block";
+
+        terminal.textContent = "";
+        commandInput.value = "";
+        password.value = "";
+
+        if(!connectionStatus.textContent)
+        {
+            connectionStatus.textContent = "POŁĄCZENIE ZOSTAŁO ZAKOŃCZONE!";
+        }
+
+        checkLoginFields();
+        password.focus();
+    });
+
+
+    client.on("message", function(topic,message)
+    {
+        print("\n" + message.toString());
+    });
+}
+
+
+function sendCommand()
+{
+    if(!connected)
+        return;
+
+    const text = commandInput.value;
+
+    if(!text)
+        return;
+
+    print("\n■ " + text);
+
+    client.publish(
+        TOPIC_PUBLISH,
+        text + LINE_END,
+        { qos: 2 },
+        function(error)
+        {
+            if(error)
+            {
+                printInfo("\n[NIE MOŻNA WYSŁAĆ DANYCH]\n");
+            }
+        }
+    );
+
+    commandInput.value = "";
+}
+
+
+function loadDevices()
+{
+    devices.forEach(function(device, index)
+    {
+        const option = document.createElement("option");
+
+        option.value = index;
+        option.textContent = device.name;
+
+        deviceSelect.appendChild(option);
+    });
+}
+
+
+function createClientID(name)
+{
+    return "terminal_" + name
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/ł/g, "l")
+        .replace(/[^a-z0-9]/g, "");
+}
+
+
+deviceSelect.addEventListener("change", function()
+{
+    if(this.value === "")
+    {
+        TOPIC_PUBLISH = "";
+        TOPIC_SUBSCRIBE = "";
+        DEVICE_NAME = "";
+        CLIENT_ID = "";
+
+        document.title = "Terminal";
+
+        checkLoginFields();
+
+        return;
+    }
+
+    const device = devices[this.value];
+
+    TOPIC_PUBLISH = device.pub;
+    TOPIC_SUBSCRIBE = device.sub;
+    DEVICE_NAME = device.name;
+    CLIENT_ID = createClientID(device.name);
+
+    document.title = "Terminal: " + DEVICE_NAME;
+
+    checkLoginFields();
+
+    if(!connectButton.disabled)
+    {
+        connectButton.focus();
+    }
+});
+
+
+if(typeof devices !== "undefined" && Array.isArray(devices))
+{
+    loadDevices();
+}
+else
+{
+    connectionStatus.textContent = "BRAK LISTY URZĄDZEŃ!";
+}
+
+username.focus();
+username.addEventListener("input", checkLoginFields);
+password.addEventListener("input", checkLoginFields);
+
+
+username.addEventListener("keydown", function(event)
+{
+    if(event.key === "Enter")
+    {
+        password.focus();
+    }
+});
+
+
+password.addEventListener("keydown", function(event)
+{
+    if(event.key === "Enter")
+    {
+        event.preventDefault();
+        if(!username.value)
+        {
+            username.focus();
+        }
+        else if(!password.value)
+        {
+            password.focus();
+        }
+        else if(deviceSelect.value !== "")
+        {
+            connectMQTT();
+        }
+        else
+        {
+            deviceSelect.focus();
+        }
+    }
+});
+
+
+commandInput.addEventListener("keydown", function(event)
+{
+    if(event.key === "Escape")
+    {
+        commandInput.value = "";
+    }
+
+    if(event.key === "Enter")
+    {
+        sendCommand();
+    }
+});
+
+</script>
+
+</body>
+</html>
+
