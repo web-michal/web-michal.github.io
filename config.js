@@ -26,10 +26,10 @@ window.devices = [
     buttonCmd7: "5S",
     buttonName8: "SEL6",
     buttonCmd8: "6S",
-    buttonName7: "SEL7",
-    buttonCmd7: "7S",
-    buttonName8: "SEL8",
-    buttonCmd8: "8S"
+    buttonName9: "SEL7",
+    buttonCmd9: "7S",
+    buttonName10: "SEL8",
+    buttonCmd10: "8S"
     },
 
     {
@@ -53,10 +53,10 @@ window.devices = [
     buttonCmd7: "5S",
     buttonName8: "SEL6",
     buttonCmd8: "6S",
-    buttonName7: "SEL7",
-    buttonCmd7: "7S",
-    buttonName8: "SEL8",
-    buttonCmd8: "8S"
+    buttonName9: "SEL7",
+    buttonCmd9: "7S",
+    buttonName10: "SEL8",
+    buttonCmd10: "8S"
     }
 
 ];
