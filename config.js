@@ -6,9 +6,9 @@ const mqttServer = "wss://5be1c7927e2b41159c0a489a411bd419.s1.eu.hivemq.cloud:88
 window.devices = [
 
     {
-    name: "TRANE 1 Szczecin",
-    topicPublish: "trane1_szczecin/command",
-    topicSubscribe: "trane1_szczecin/status",
+    name: "AO Szczecin TRANE 1",
+    topicPublish: "ao_szczecin_trane/1/command",
+    topicSubscribe: "ao_szczecin_trane/1/status",
     lineEnding: "\r\n",
     buttonName1: "MENU",
     buttonCmd1: "M",
@@ -33,9 +33,9 @@ window.devices = [
     },
 
     {
-    name: "TRANE 2 Szczecin",
-    topicPublish: "trane2_szczecin/command",
-    topicSubscribe: "trane2_szczecin/status",
+    name: "AO Szczecin TRANE 2",
+    topicPublish: "ao_szczecin_trane/2/command",
+    topicSubscribe: "ao_szczecin_trane/2/status",
     lineEnding: "\r\n",
     buttonName1: "MENU",
     buttonCmd1: "M",
