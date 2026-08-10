@@ -9,7 +9,7 @@ window.devices = [
     name: "AO Szczecin TRANE 1",
     topicPublish: "ao_szczecin_trane/1/command",
     topicSubscribe: "ao_szczecin_trane/1/status",
-    lineEnding: " ",
+    lineEnding: "",
     buttonName1: "MENU",
     buttonCmd1: "M",
     buttonName2: "LIST",
