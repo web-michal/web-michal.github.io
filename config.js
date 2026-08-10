@@ -36,7 +36,7 @@ window.devices = [
     name: "AO Szczecin TRANE 2",
     topicPublish: "ao_szczecin_trane/2/command",
     topicSubscribe: "ao_szczecin_trane/2/status",
-    lineEnding: "\r\n",
+    lineEnding: "\r",
     buttonName1: "MENU",
     buttonCmd1: "M",
     buttonName2: "LIST",
