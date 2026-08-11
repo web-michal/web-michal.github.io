@@ -347,20 +347,17 @@ function terminalData(text) {
 }
 
 
-function sendCommand(text) {
-    if(!isMqttConnected || !selectedDevice) return;
-
-    const cmd = text;
-
-    if(!cmd) return;
+function sendCommand(input) {
+    if(!isMqttConnected || !selectedDevice || !input) return;
 
     let bytes = [];
-    for(let i = 0; i < cmd.length; i++)
-        bytes.push(cmd.charCodeAt(i));
+    if(typeof input === "number")
+        bytes.push(input);
+    else
+        for(let i = 0; i < input.length; i++)
+            bytes.push(input.charCodeAt(i));
 
-    const payloadBuffer = new Uint8Array(bytes);
-
-    mqttClient.publish(selectedDevice.topicPublish, payloadBuffer, { qos: 2 }, function(error) {
+    mqttClient.publish(selectedDevice.topicPublish, new Uint8Array(bytes), { qos: 2 }, function(error) {
         if(error)
             terminalData("\n[NIE MOŻNA WYSŁAĆ DANYCH]\n");
     });
@@ -442,47 +439,42 @@ function createClientId(str) {
 }
 
 
-document.addEventListener("keypress", function(event) {
-    if(!isMqttConnected || !selectedDevice) return;
-
-    let charCode = event.which || event.keyCode;
-
-    if(event.key === "Enter")
-        charCode = 13;
-
-    event.preventDefault();
-
-    const singleByteBuffer = new Uint8Array([charCode]);
-
-    mqttClient.publish(selectedDevice.topicPublish, singleByteBuffer, { qos: 2 });
-});
-
-
 document.addEventListener("keydown", function(event) {
     if(!isMqttConnected || !selectedDevice) return;
 
-    let specialCharCode = 0;
+    let charCode = 0;
 
-    if(event.key === "Backspace")
-        specialCharCode = 8;
+    if(event.key === "Enter")
+        charCode = 13;
+    else if(event.key === "Backspace")
+        charCode = 8;
     else if(event.key === "Escape")
-        specialCharCode = 27;
+        charCode = 27;
+    else if(event.key.length === 1)
+        charCode = event.key.charCodeAt(0);
 
-    if(specialCharCode > 0) {
+    if(charCode > 0) {
         event.preventDefault();
-        const specialBuffer = new Uint8Array([specialCharCode]);
-        mqttClient.publish(selectedDevice.topicPublish, specialBuffer, { qos: 2 });
+        sendCommand(charCode);
     }
 });
 
 
 mobileInput.addEventListener("input", function() {
-    if(!isMqttConnected || !selectedDevice) return;
-    
-    const text = this.value;
-    if(text.length > 0) {
-        sendCommand(text);
+    if(this.value.length > 0) {
+        sendCommand(this.value);
         this.value = "";
+    }
+});
+
+
+mobileInput.addEventListener("keydown", function(event) {
+    if(event.key === "Enter") {
+        event.preventDefault();
+        sendCommand(13);
+    } else if(event.key === "Backspace") {
+        event.preventDefault();
+        sendCommand(8);
     }
 });
 
@@ -492,16 +484,25 @@ terminal.addEventListener("click", function() {
 });
 
 
+document.addEventListener("click", function(event) {
+    if(isMqttConnected) return;
+    if(event.target.tagName === "INPUT" || event.target.tagName === "SELECT" || event.target.tagName === "BUTTON") return;
+
+    if(username.value)
+        password.focus();
+    else
+        username.focus();
+});
+
+
 deviceSelect.addEventListener("change", function() {
     if(this.value === "") {
         selectedDevice = null;
         document.title = "Terminal";
-        toggleConnectButton();
-        return;
+    } else {
+        selectedDevice = devices[this.value];
+        document.title = "Terminal: " + selectedDevice.name;
     }
-
-    selectedDevice = devices[this.value];
-    document.title = "Terminal: " + selectedDevice.name;
 
     toggleConnectButton();
 
@@ -510,7 +511,7 @@ deviceSelect.addEventListener("change", function() {
 });
 
 
-password.addEventListener("input", function() { toggleConnectButton(); });
+password.addEventListener("input", toggleConnectButton);
 password.addEventListener("keydown", function(event) {
     if(event.key === "Enter") {
         event.preventDefault();
@@ -527,10 +528,12 @@ password.addEventListener("keydown", function(event) {
 });
 
 
-username.addEventListener("input", function() { toggleConnectButton(); });
+username.addEventListener("input", toggleConnectButton);
 username.addEventListener("keydown", function(event) {
-    if(event.key === "Enter")
+    if(event.key === "Enter") {
+        event.preventDefault();
         password.focus();
+    }
 });
 
 
@@ -560,4 +563,3 @@ username.focus();
 
 </body>
 </html>
-
