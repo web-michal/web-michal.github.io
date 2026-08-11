@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terminal</title>
+
+<script src="mqtt.js"></script>
+<script src="config.js"></script>
+
+<style>
+html {
+    margin: 0;
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    height: 100%;
+    height: 100dvh;
+    background: #000;
+    color: #fff;
+    font-family: monospace;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+#logoutButton {
+    position: absolute;
+    top: 15px;
+    right: 60px;
+    width: 30px;
+    height: 30px;
+    box-sizing: border-box;
+    background: linear-gradient(45deg, transparent 45%, #fff 45%, #fff 55%, transparent 55%),
+                linear-gradient(-45deg, transparent 45%, #fff 45%, #fff 55%, transparent 55%);
+    background-clip: content-box;
+    border: 1px solid #fff;
+    outline: none;
+    padding: 4px;
+    z-index: 1000;
+    display: none;
+}
+
+#lightModeButton {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 30px;
+    height: 30px;
+    box-sizing: border-box;
+    background: linear-gradient(45deg, #000 50%, #fff 50%);
+    border: 1px solid #fff;
+    outline: none;
+    padding: 0;
+    z-index: 1000;
+}
+
+#loginForm {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    box-sizing: border-box;
+    padding: 20px;
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 10px;
+}
+
+#loginForm input {
+    width: 100%;
+    height: 35px;
+    margin: 10px 0;
+    box-sizing: border-box;
+    background: #111;
+    color: #fff;
+    border: 1px solid #333;
+    outline: none;
+    padding: 0 10px;
+    font-size: 16px;
+}
+
+#loginForm input::placeholder {
+    color: #fff;
+    opacity: 1;
+}
+
+#loginForm select {
+    width: 100%;
+    height: 35px;
+    margin: 10px 0;
+    box-sizing: border-box;
+    background: #111;
+    color: #fff;
+    border: 1px solid #333;
+    border-radius: 0;
+    outline: none;
+    padding: 0 10px;
+    font-size: 16px;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+#loginForm button {
+    width: 100%;
+    height: 35px;
+    margin: 10px 0;
+    background: #444;
+    color: #fff;
+    border: 1px solid #555;
+    outline: none;
+    letter-spacing: 10px;
+}
+
+#loginForm button:hover {
+    background: #555;
+}
+
+#loginForm button:disabled {
+    background: #222;
+    color: #444;
+    border-color: #333;
+}
+
+#connectionStatus {
+    margin-top: 10px;
+    min-height: 25px;
+    color: #ff4040;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+}
+
+#terminal {
+    flex: 1;
+    overflow: auto;
+    padding: 10px;
+    box-sizing: border-box;
+    white-space: pre-wrap;
+    word-break: break-all;
+    display: none;
+    outline: none;
+    cursor: text;
+}
+
+#commandButtons {
+    padding: 5px 10px;
+    gap: 5px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+    display: none;
+}
+
+#commandButtons button {
+    height: 30px;
+    background: #444;
+    color: #fff;
+    border: 1px solid #555;
+    outline: none;
+    padding: 0 12px;
+    font-family: monospace;
+}
+
+#commandButtons button:hover {
+    background: #555;
+}
+
+body.lightMode #logoutButton {
+    background: linear-gradient(45deg, transparent 45%, #000 45%, #000 55%, transparent 55%),
+                linear-gradient(-45deg, transparent 45%, #000 45%, #000 55%, transparent 55%);
+    background-clip: content-box;
+    border-color: #000;
+}
+
+body.lightMode #lightModeButton {
+    background: linear-gradient(45deg, #fff 50%, #000 50%);
+    border-color: #000;
+}
+
+body.lightMode,
+body.lightMode #loginForm,
+body.lightMode #loginForm input,
+body.lightMode #loginForm input::placeholder,
+body.lightMode #loginForm select {
+    background: #fff;
+    color: #000;
+}
+
+body.lightMode #loginForm button {
+    background: #333;
+    border-color: #000;
+}
+
+body.lightMode #loginForm button:hover {
+    background: #555;
+}
+
+body.lightMode #loginForm button:disabled {
+    background: #999;
+    color: #666;
+    border-color: #333;
+}
+
+body.lightMode #connectionStatus {
+    color: #b22222;
+}
+
+body.lightMode #commandButtons button {
+    background: #333;
+    border-color: #000;
+}
+
+body.lightMode #commandButtons button:hover {
+    background: #555;
+}
+</style>
+</head>
+
+<body>
+<button id="logoutButton" title="Zakończ sesję"></button>
+<button id="lightModeButton" title="Tryb jasny lub ciemny"></button>
+
+<div id="loginForm">
+    <input id="username" type="text" placeholder="użytkownik" autocomplete="username">
+    <input id="password" type="password" placeholder="hasło" autocomplete="current-password">
+    <select id="deviceSelect"></select>
+    <button id="connectButton" disabled>POŁĄCZ</button>
+    <div id="connectionStatus"></div>
+</div>
+
+<div id="terminal"></div>
+<div id="commandButtons"></div>
+
+<script>
+const loginForm = document.getElementById("loginForm");
+const username = document.getElementById("username");
+const password = document.getElementById("password");
+const deviceSelect = document.getElementById("deviceSelect");
+const connectButton = document.getElementById("connectButton");
+const connectionStatus = document.getElementById("connectionStatus");
+const terminal = document.getElementById("terminal");
+const commandButtons = document.getElementById("commandButtons");
+const logoutButton = document.getElementById("logoutButton");
+const lightModeButton = document.getElementById("lightModeButton");
+
+let mqttClient;
+let isMqttConnected = false;
+let selectedDevice = null;
+
+
+function connectMqtt() {
+    if(!selectedDevice) {
+        connectionStatus.textContent = "WYBIERZ URZĄDZENIE!";
+        return;
+    }
+
+    isMqttConnected = false;
+    connectionStatus.textContent = "";
+
+    if(mqttClient)
+        mqttClient.end();
+
+    mqttClient = mqtt.connect(mqttServer, {
+        username: username.value,
+        password: password.value,
+        clientId: createClientId(selectedDevice.name),
+        clean: true,
+        reconnectPeriod: 0
+    });
+
+    mqttClient.on("connect", function() {
+        isMqttConnected = true;
+        password.value = "";
+
+        loginForm.style.display = "none";
+        logoutButton.style.display = "block";
+        terminal.style.display = "block";
+
+        loadCommandButtons(selectedDevice);
+
+        terminalData(selectedDevice.name + "\n[POŁĄCZONO Z SERWEREM]\n");
+
+        mqttClient.subscribe(selectedDevice.topicSubscribe, { qos: 2 }, function(error) {
+            if(error)
+                terminalData("\n[NIE MOŻNA ODBIERAĆ DANYCH]\n");
+        });
+    });
+
+    mqttClient.on("error", function(error) {
+        if(isMqttConnected)
+            terminalData("\n[BŁĄD] " + error.message + "\n");
+        else
+            connectionStatus.textContent = "LOGOWANIE NIE POWIODŁO SIĘ!";
+    });
+
+    mqttClient.on("close", function() {
+        isMqttConnected = false;
+
+        logoutButton.style.display = "none";
+        terminal.style.display = "none";
+        commandButtons.style.display = "none";
+        loginForm.style.display = "block";
+
+        terminal.innerHTML = "";
+        password.value = "";
+
+        if(!connectionStatus.textContent)
+            connectionStatus.textContent = "POŁĄCZENIE ZOSTAŁO ZAKOŃCZONE!";
+
+        toggleConnectButton();
+        password.focus();
+    });
+
+    mqttClient.on("message", function(topic, message) {
+        if(message)
+            terminalData(message.toString());
+    });
+}
+
+
+function terminalData(text) {
+    if(!text) return;
+
+    const newLines = text.split("\n");
+    let lastLineElement;
+
+    newLines.forEach(function(line) {
+        const lineElement = document.createElement("div");
+        lineElement.textContent = line === "" ? "\u00A0" : line;
+        terminal.appendChild(lineElement);
+        lastLineElement = lineElement;
+    });
+
+    while(terminal.children.length > 1000)
+        terminal.removeChild(terminal.firstChild);
+
+    if(lastLineElement) {
+        try { lastLineElement.scrollIntoView({ block: "end" }); }
+        catch(e) { terminal.scrollTop = terminal.scrollHeight; }
+    }
+}
+
+
+function sendCommand(text) {
+    if(!isMqttConnected || !selectedDevice) return;
+
+    const cmd = text;
+
+    if(!cmd) return;
+
+    let bytes = [];
+    for(let i = 0; i < cmd.length; i++)
+        bytes.push(cmd.charCodeAt(i));
+
+    const payloadBuffer = new Uint8Array(bytes);
+
+    mqttClient.publish(selectedDevice.topicPublish, payloadBuffer, { qos: 2 }, function(error) {
+        if(error)
+            terminalData("\n[NIE MOŻNA WYSŁAĆ DANYCH]\n");
+    });
+}
+
+
+function loadCommandButtons(device) {
+    if(!device) return;
+
+    Array.from(commandButtons.children).forEach(function(button) {
+        button.onclick = null;
+    });
+
+    commandButtons.innerHTML = "";
+
+    let index = 1;
+
+    while(device["buttonCmd" + index]) {
+        const buttonCmd = device["buttonCmd" + index];
+        const buttonName = device["buttonName" + index] || ("CMD " + index);
+
+        const button = document.createElement("button");
+        button.textContent = buttonName;
+        button.onclick = function() { sendCommand(buttonCmd); };
+
+        commandButtons.appendChild(button);
+        index++;
+    }
+
+    commandButtons.style.display = commandButtons.children.length ? "flex" : "none";
+}
+
+
+function loadDevices() {
+    const option = document.createElement("option");
+    option.value = "";
+    option.textContent = "urządzenie";
+    deviceSelect.appendChild(option);
+
+    devices.forEach(function(device, index) {
+        const option = document.createElement("option");
+        option.value = index;
+        option.textContent = device.name;
+        deviceSelect.appendChild(option);
+    });
+}
+
+
+function toggleLightMode() {
+    document.body.classList.toggle("lightMode");
+
+    document.body.style.display = "none";
+    document.body.offsetHeight;
+    document.body.style.display = "";
+}
+
+
+function toggleConnectButton() {
+    connectButton.disabled = !(username.value && password.value && deviceSelect.value !== "");
+}
+
+
+function createClientId(str) {
+    return "terminal_" + str.toLowerCase()
+        .replace(/ą/g, "a")
+        .replace(/ć/g, "c")
+        .replace(/ę/g, "e")
+        .replace(/ł/g, "l")
+        .replace(/ń/g, "n")
+        .replace(/ó/g, "o")
+        .replace(/ś/g, "s")
+        .replace(/ź/g, "z")
+        .replace(/ż/g, "z")
+        .replace(/\s+/g, "_")
+        .replace(/[^a-z0-9_]/g, "");
+}
+
+
+document.addEventListener("keypress", function(event) {
+    if(!isMqttConnected || !selectedDevice) return;
+
+    let charCode = event.which || event.keyCode;
+
+    if(event.key === "Enter")
+        charCode = 13;
+
+    event.preventDefault();
+
+    const singleByteBuffer = new Uint8Array([charCode]);
+
+    mqttClient.publish(selectedDevice.topicPublish, singleByteBuffer, { qos: 2 });
+});
+
+
+document.addEventListener("keydown", function(event) {
+    if(!isMqttConnected || !selectedDevice) return;
+
+    let specialCharCode = 0;
+
+    if(event.key === "Backspace")
+        specialCharCode = 8;
+    else if(event.key === "Escape")
+        specialCharCode = 27;
+
+    if(specialCharCode > 0) {
+        event.preventDefault();
+        const specialBuffer = new Uint8Array([specialCharCode]);
+        mqttClient.publish(selectedDevice.topicPublish, specialBuffer, { qos: 2 });
+    }
+});
+
+
+document.addEventListener("click", function(event) {
+    if(window.matchMedia && !window.matchMedia("(pointer: fine)").matches) return;
+
+    if(window.getSelection().toString() && window.getSelection().anchorNode && terminal.contains(window.getSelection().anchorNode)) return;
+
+    if(event.target.tagName === "INPUT" || event.target.tagName === "SELECT") return;
+
+    if(event.target.id === "connectButton" || event.target.id === "logoutButton") return;
+
+    setTimeout(function() {
+        if(isMqttConnected)
+            terminal.focus();
+        else if(username.value)
+            password.focus();
+        else
+            username.focus();
+    }, 0);
+});
+
+
+deviceSelect.addEventListener("change", function() {
+    if(this.value === "") {
+        selectedDevice = null;
+        document.title = "Terminal";
+        toggleConnectButton();
+        return;
+    }
+
+    selectedDevice = devices[this.value];
+    document.title = "Terminal: " + selectedDevice.name;
+
+    toggleConnectButton();
+
+    if(!connectButton.disabled)
+        connectButton.focus();
+});
+
+
+password.addEventListener("input", function() { toggleConnectButton(); });
+password.addEventListener("keydown", function(event) {
+    if(event.key === "Enter") {
+        event.preventDefault();
+
+        if(!username.value)
+            username.focus();
+        else if(!password.value)
+            password.focus();
+        else if(deviceSelect.value !== "")
+            connectMqtt();
+        else
+            deviceSelect.focus();
+    }
+});
+
+
+username.addEventListener("input", function() { toggleConnectButton(); });
+username.addEventListener("keydown", function(event) {
+    if(event.key === "Enter")
+        password.focus();
+});
+
+
+connectButton.addEventListener("click", function() {
+    connectMqtt();
+});
+
+
+logoutButton.addEventListener("click", function() {
+    if(mqttClient)
+        mqttClient.end();
+});
+
+
+lightModeButton.addEventListener("click", function() {
+    toggleLightMode();
+});
+
+
+if(window.devices && Array.isArray(devices))
+    loadDevices();
+else
+    connectionStatus.textContent = "BRAK LISTY URZĄDZEŃ!";
+
+username.focus();
+</script>
+
+</body>
+</html>
+
