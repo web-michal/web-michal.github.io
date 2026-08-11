@@ -260,6 +260,8 @@ function connectMqtt() {
         return;
     }
 
+    connectButton.disabled = true;
+
     isMqttConnected = false;
     connectionStatus.textContent = "";
 
@@ -297,8 +299,10 @@ function connectMqtt() {
     mqttClient.on("error", function(error) {
         if(isMqttConnected)
             terminalData("\n[BŁĄD] " + error.message + "\n");
-        else
+        else {
             connectionStatus.textContent = "LOGOWANIE NIE POWIODŁO SIĘ!";
+            toggleConnectButton();
+        }
     });
 
     mqttClient.on("close", function() {
@@ -349,14 +353,14 @@ function terminalData(text) {
 }
 
 
-function sendCommand(input) {
-    if(!isMqttConnected || !selectedDevice || !input) return;
+function sendCommand(data) {
+    if(!isMqttConnected || !selectedDevice || !data) return;
 
     let bytes = [];
-    if(typeof input === "number")
-        bytes.push(input);
+    if(typeof data === "number")
+        bytes.push(data);
     else
-        for(let i = 0; i < input.length; i++)
+        for(let i = 0; i < data.length; i++)
             bytes.push(input.charCodeAt(i));
 
     mqttClient.publish(selectedDevice.topicPublish, new Uint8Array(bytes), { qos: 2 }, function(error) {
@@ -425,8 +429,8 @@ function toggleConnectButton() {
 }
 
 
-function createClientId(str) {
-    return "terminal_" + str.toLowerCase()
+function createClientId(deviceName) {
+    return "terminal_" + deviceName.toLowerCase()
         .replace(/ą/g, "a")
         .replace(/ć/g, "c")
         .replace(/ę/g, "e")
