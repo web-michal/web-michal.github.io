@@ -493,13 +493,17 @@ document.addEventListener("click", function(event) {
 
     if(event.target.id === "connectButton" || event.target.id === "logoutButton") return;
 
+    if(commandButtons.contains(event.target) || event.target.id === "lightModeButton") return;
+
     setTimeout(function() {
         if(isMqttConnected) {
-            const isMobile = window.matchMedia && !window.matchMedia("(pointer: fine)").matches;
-            if (isMobile)
-                mobileInput.focus();
+            if (event.target.id === "terminal") {
+                const isMobile = window.matchMedia && !window.matchMedia("(pointer: fine)").matches;
+                if (isMobile)
+                    mobileInput.focus();
             else
                 terminal.focus();
+            }
         }
         else if(username.value)
             password.focus();
