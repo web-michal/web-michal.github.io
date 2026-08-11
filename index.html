@@ -364,6 +364,9 @@ function sendCommand(text) {
         if(error)
             terminalData("\n[NIE MOŻNA WYSŁAĆ DANYCH]\n");
     });
+
+    if (window.matchMedia && window.matchMedia("(pointer: fine)").matches)
+        mobileInput.focus();
 }
 
 
@@ -484,32 +487,8 @@ mobileInput.addEventListener("input", function() {
 });
 
 
-document.addEventListener("click", function(event) {
-    //if(window.matchMedia && !window.matchMedia("(pointer: fine)").matches) return;
-
-    if(window.getSelection().toString() && window.getSelection().anchorNode && terminal.contains(window.getSelection().anchorNode)) return;
-
-    if(event.target.tagName === "INPUT" || event.target.tagName === "SELECT") return;
-
-    if(event.target.id === "connectButton" || event.target.id === "logoutButton") return;
-
-    if(commandButtons.contains(event.target) || event.target.id === "lightModeButton") return;
-
-    setTimeout(function() {
-        if(isMqttConnected) {
-            if (event.target.id === "terminal") {
-                const isMobile = window.matchMedia && !window.matchMedia("(pointer: fine)").matches;
-                if (isMobile)
-                    mobileInput.focus();
-            else
-                terminal.focus();
-            }
-        }
-        else if(username.value)
-            password.focus();
-        else
-            username.focus();
-    }, 0);
+terminal.addEventListener("click", function() {
+    mobileInput.focus();
 });
 
 
