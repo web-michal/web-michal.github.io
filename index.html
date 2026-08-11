@@ -293,7 +293,8 @@ function connectMqtt() {
                 terminalData("\n[NIE MOŻNA ODBIERAĆ DANYCH]\n");
         });
 
-        hiddenInput.focus();
+        if(window.matchMedia && window.matchMedia("(pointer: fine)").matches)
+            hiddenInput.focus();
     });
 
     mqttClient.on("error", function(error) {
@@ -371,7 +372,7 @@ function sendCommand(data) {
             terminalData("\n[NIE MOŻNA WYSŁAĆ DANYCH]\n");
     });
 
-    if (window.matchMedia && window.matchMedia("(pointer: fine)").matches)
+    if(window.matchMedia && window.matchMedia("(pointer: fine)").matches)
         hiddenInput.focus();
 }
 
