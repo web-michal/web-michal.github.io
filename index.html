@@ -361,7 +361,7 @@ function sendCommand(data) {
         bytes.push(data);
     else
         for(let i = 0; i < data.length; i++)
-            bytes.push(input.charCodeAt(i));
+            bytes.push(data.charCodeAt(i));
 
     mqttClient.publish(selectedDevice.topicPublish, new Uint8Array(bytes), { qos: 2 }, function(error) {
         if(error)
@@ -477,7 +477,7 @@ terminal.addEventListener("click", function() {
 
 document.addEventListener("click", function(event) {
     if(isMqttConnected) return;
-    if(event.target.tagName === "INPUT" || event.target.tagName === "SELECT" || event.target.tagName === "BUTTON") return;
+    if(event.target.tagName === "INPUT" || event.target.tagName === "SELECT") return;
 
     if(username.value)
         password.focus();
