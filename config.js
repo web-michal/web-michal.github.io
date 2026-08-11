@@ -27,8 +27,8 @@ window.devices = [
     buttonCmd8: "6S",
     buttonName9: "SEL7",
     buttonCmd9: "7S",
-    buttonName10: "SEL8",
-    buttonCmd10: "8S"
+    buttonName10: "STAT",
+    buttonCmd10: "9M3SM6S"
     },
 
     {
