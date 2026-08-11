@@ -341,7 +341,7 @@ function terminalData(text) {
 
     newLines.forEach(function(line) {
         const lineElement = document.createElement("div");
-        lineElement.textContent = line === "" ? "\u00A0" : line;
+        lineElement.textContent = line.trim() === "" ? "\u00A0" : line;
         terminal.appendChild(lineElement);
         lastLineElement = lineElement;
     });
