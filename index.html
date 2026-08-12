@@ -481,13 +481,15 @@ terminal.addEventListener("click", function() {
 });
 
 
-document.addEventListener("mouseup", function(event) {
+document.addEventListener("click", function(event) {
     if(!isItComputer) return;
     if(event.target.tagName === "INPUT" || event.target.tagName === "SELECT") return;
 
     if(isMqttConnected) {
-        if(window.getSelection().toString() && window.getSelection().anchorNode && terminal.contains(window.getSelection().anchorNode)) return;
-        hiddenInput.focus();
+        setTimeout(function() {
+            if(window.getSelection().toString() && window.getSelection().anchorNode && terminal.contains(window.getSelection().anchorNode)) return;
+            hiddenInput.focus();
+        }, 0);
     } else {
         if(username.value)
             password.focus();
