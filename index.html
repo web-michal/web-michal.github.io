@@ -362,20 +362,19 @@ function terminalData(text) {
 }
 */
 
-function terminalData(text) {
-    if(!text) return;
+function terminalData(data) {
+    if(!data) return;
 
-    text = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F\xAD]/g, "");
+    data = data.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F\xAD]/g, "");
 
-    var textNode = document.createTextNode(text);
+    var textNode = document.createTextNode(data);
     terminal.appendChild(textNode);
 
     var fullText = terminal.textContent;
     var lines = fullText.split("\n");
     
-    if (lines.length > 3000) {
+    if(lines.length > 3000)
         terminal.textContent = lines.slice(-3000).join("\n");
-    }
 
     terminal.scrollTop = terminal.scrollHeight;
 }
