@@ -481,7 +481,7 @@ terminal.addEventListener("click", function() {
 });
 
 
-document.addEventListener("click", function(event) {
+document.addEventListener("mouseup", function(event) {
     if(!isItComputer) return;
     if(event.target.tagName === "INPUT" || event.target.tagName === "SELECT") return;
 
