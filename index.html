@@ -321,7 +321,8 @@ function connectMqtt() {
             connectionStatus.textContent = "POŁĄCZENIE ZOSTAŁO ZAKOŃCZONE!";
 
         toggleConnectButton();
-        password.focus();
+        if(window.matchMedia && window.matchMedia("(pointer: fine)").matches)
+            password.focus();
     });
 
     mqttClient.on("message", function(topic, message) {
@@ -549,7 +550,8 @@ if(window.devices && Array.isArray(devices))
 else
     connectionStatus.textContent = "BRAK LISTY URZĄDZEŃ!";
 
-username.focus();
+if(window.matchMedia && window.matchMedia("(pointer: fine)").matches)
+    username.focus();
 </script>
 
 </body>
