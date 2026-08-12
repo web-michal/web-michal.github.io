@@ -182,6 +182,7 @@ body.lightMode #lightModeButton {
 }
 
 body.lightMode,
+body.lightMode #terminal_0,
 body.lightMode #loginForm,
 body.lightMode #loginForm input,
 body.lightMode #loginForm input::placeholder,
@@ -424,9 +425,9 @@ function loadDevices() {
 function toggleLightMode() {
     document.body.classList.toggle("lightMode");
 
-    document.body.style.display = "none";
-    document.body.offsetHeight;
-    document.body.style.display = "";
+    //document.body.style.display = "none";
+    //document.body.offsetHeight;
+    //document.body.style.display = "";
 }
 
 
