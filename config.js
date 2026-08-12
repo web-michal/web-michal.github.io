@@ -19,7 +19,7 @@ window.devices = [
     buttonCmd4: "P",
     buttonName5: "NEXT",
     buttonCmd5: "N",
-    buttonName6: "CLR ",
+    buttonName6: "CLR&nbsp;",
     buttonCmd6: "C",
     buttonName7: "STAT",
     buttonCmd7: "\u001b3SM6S",
