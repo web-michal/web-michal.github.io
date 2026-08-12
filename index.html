@@ -332,7 +332,7 @@ function connectMqtt() {
     });
 }
 
-
+/*
 function terminalData(text) {
     if(!text) return;
 
@@ -352,13 +352,32 @@ function terminalData(text) {
 
     terminal.appendChild(fragment);
 
-    while(terminal.children.length > 1000)
+    while(terminal.children.length > 3000)
         terminal.removeChild(terminal.firstChild);
 
     if(lastLineElement) {
         try { lastLineElement.scrollIntoView({ block: "end" }); }
         catch(e) { terminal.scrollTop = terminal.scrollHeight; }
     }
+}
+*/
+
+function terminalData(text) {
+    if(!text) return;
+
+    text = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F\xAD]/g, "");
+
+    var textNode = document.createTextNode(text);
+    terminal.appendChild(textNode);
+
+    var fullText = terminal.textContent;
+    var lines = fullText.split("\n");
+    
+    if (lines.length > 3000) {
+        terminal.textContent = lines.slice(-3000).join("\n");
+    }
+
+    terminal.scrollTop = terminal.scrollHeight;
 }
 
 
