@@ -252,7 +252,7 @@ const lightModeButton = document.getElementById("lightModeButton");
 let mqttClient;
 let isMqttConnected = false;
 let selectedDevice = null;
-const isItComputer = window.matchMedia && window.matchMedia("(pointer: fine)").matches;
+const isItComputer = /Windows|Macintosh|Linux/i.test(navigator.userAgent) && !/Android|iPhone|iPad|iPod|BlackBerry|IEMobile/i.test(navigator.userAgent);
 
 
 function connectMqtt() {
@@ -340,14 +340,17 @@ function terminalData(text) {
     text = text.replace(/[\x00-\x09\x0B\x0C\x0E-\x1F\x7F-\x9F\xAD]/g, "");
 
     const newLines = text.split("\n");
+    const fragment = document.createDocumentFragment();
     let lastLineElement;
 
     newLines.forEach(function(line) {
         const lineElement = document.createElement("div");
         lineElement.textContent = line.trim() === "" ? "\u00A0" : line;
-        terminal.appendChild(lineElement);
+        fragment.appendChild(lineElement);
         lastLineElement = lineElement;
     });
+
+    terminal.appendChild(fragment);
 
     while(terminal.children.length > 1000)
         terminal.removeChild(terminal.firstChild);
@@ -382,11 +385,10 @@ function sendCommand(data) {
 function loadCommandButtons(device) {
     if(!device) return;
 
-    Array.from(commandButtons.children).forEach(function(button) {
-        button.onclick = null;
-    });
-
-    commandButtons.innerHTML = "";
+    while(commandButtons.firstChild) {
+        commandButtons.firstChild.onclick = null;
+        commandButtons.removeChild(commandButtons.firstChild);
+    }
 
     let index = 1;
 
@@ -427,7 +429,7 @@ function toggleLightMode() {
 
 
 function toggleConnectButton() {
-    connectButton.disabled = !(username.value && password.value && deviceSelect.value !== "");
+    connectButton.disabled = !username.value || !password.value || deviceSelect.value === "";
 }
 
 
@@ -460,6 +462,7 @@ hiddenInput.addEventListener("keydown", function(event) {
     if(charCode > 0) {
         event.preventDefault();
         sendCommand(charCode);
+        this.value = "";
     }
 });
 
@@ -532,7 +535,7 @@ deviceSelect.addEventListener("change", function() {
 
     toggleConnectButton();
 
-    if(!connectButton.disabled)
+    if(!connectButton.disabled && isItComputer)
         connectButton.focus();
 });
 
