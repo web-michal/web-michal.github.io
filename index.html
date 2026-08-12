@@ -366,7 +366,7 @@ function terminalData(text) {
 function terminalData(data) {
     if(!data) return;
 
-    data = data.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F\xAD]/g, "");
+    data = data.replace(/[\x00-\x08\x0B\x0C\x0D\x0E-\x1F\x7F-\x9F\xAD]/g, "");
 
     var textNode = document.createTextNode(data);
     terminal.appendChild(textNode);
