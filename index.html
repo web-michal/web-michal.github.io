@@ -477,8 +477,9 @@ hiddenInput.addEventListener("input", function() {
 
 
 terminal.addEventListener("click", function() {
-    if(!isItComputer)
-        hiddenInput.focus();
+    if(isItComputer) return;
+    
+    hiddenInput.focus();
 });
 
 
@@ -488,9 +489,7 @@ document.addEventListener("click", function(event) {
 
     if(isMqttConnected) {
         if(window.getSelection().toString() && window.getSelection().anchorNode && terminal.contains(window.getSelection().anchorNode)) return;
-        //setTimeout(function() {
-            hiddenInput.focus();
-        //}, 0);
+        hiddenInput.focus();
     } else {
         if(username.value)
             password.focus();
