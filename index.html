@@ -252,6 +252,7 @@ const lightModeButton = document.getElementById("lightModeButton");
 let mqttClient;
 let isMqttConnected = false;
 let selectedDevice = null;
+const isItComputer = window.matchMedia && window.matchMedia("(pointer: fine)").matches;
 
 
 function connectMqtt() {
@@ -293,7 +294,7 @@ function connectMqtt() {
                 terminalData("\n[NIE MOŻNA ODBIERAĆ DANYCH]\n");
         });
 
-        if(window.matchMedia && window.matchMedia("(pointer: fine)").matches)
+        if(isItComputer)
             hiddenInput.focus();
     });
 
@@ -321,7 +322,7 @@ function connectMqtt() {
             connectionStatus.textContent = "POŁĄCZENIE ZOSTAŁO ZAKOŃCZONE!";
 
         toggleConnectButton();
-        if(window.matchMedia && window.matchMedia("(pointer: fine)").matches)
+        if(isItComputer)
             password.focus();
     });
 
@@ -373,7 +374,7 @@ function sendCommand(data) {
             terminalData("\n[NIE MOŻNA WYSŁAĆ DANYCH]\n");
     });
 
-    if(window.matchMedia && window.matchMedia("(pointer: fine)").matches)
+    if(isItComputer)
         hiddenInput.focus();
 }
 
@@ -482,6 +483,7 @@ terminal.addEventListener("click", function() {
 
 document.addEventListener("click", function(event) {
     if(isMqttConnected) return;
+    if(isItComputer) return;
     if(event.target.tagName === "INPUT" || event.target.tagName === "SELECT") return;
 
     if(username.value)
@@ -550,7 +552,7 @@ if(window.devices && Array.isArray(devices))
 else
     connectionStatus.textContent = "BRAK LISTY URZĄDZEŃ!";
 
-if(window.matchMedia && window.matchMedia("(pointer: fine)").matches)
+if(isItComputer)
     username.focus();
 </script>
 
