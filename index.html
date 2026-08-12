@@ -486,8 +486,8 @@ document.addEventListener("click", function(event) {
     if(event.target.tagName === "INPUT" || event.target.tagName === "SELECT") return;
 
     if(isMqttConnected) {
+        if(window.getSelection().toString() && window.getSelection().anchorNode && terminal.contains(window.getSelection().anchorNode)) return;
         setTimeout(function() {
-            if(window.getSelection().toString() && window.getSelection().anchorNode && terminal.contains(window.getSelection().anchorNode)) return;
             hiddenInput.focus();
         }, 0);
     } else {
