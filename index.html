@@ -343,35 +343,6 @@ function connectMqtt() {
     });
 }
 
-/*
-function terminalData(text) {
-    if(!text) return;
-
-    text = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-    text = text.replace(/[\x00-\x09\x0B\x0C\x0E-\x1F\x7F-\x9F\xAD]/g, "");
-
-    const newLines = text.split("\n");
-    const fragment = document.createDocumentFragment();
-    let lastLineElement;
-
-    newLines.forEach(function(line) {
-        const lineElement = document.createElement("div");
-        lineElement.textContent = line.trim() === "" ? "\u00A0" : line;
-        fragment.appendChild(lineElement);
-        lastLineElement = lineElement;
-    });
-
-    terminal.appendChild(fragment);
-
-    while(terminal.children.length > 3000)
-        terminal.removeChild(terminal.firstChild);
-
-    if(lastLineElement) {
-        try { lastLineElement.scrollIntoView({ block: "end" }); }
-        catch(e) { terminal.scrollTop = terminal.scrollHeight; }
-    }
-}
-*/
 
 function terminalData(data) {
     if(!data) return;
