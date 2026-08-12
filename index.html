@@ -147,6 +147,17 @@ body {
     cursor: text;
 }
 
+#terminal::after {
+    content: "█";
+    margin-left: 2px;
+    animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+    from, to { opacity: 0; }
+    50% { opacity: 1; }
+}
+
 #commandButtons {
     padding: 5px 10px;
     gap: 5px;
