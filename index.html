@@ -427,9 +427,6 @@ function toggleLightMode() {
     document.body.style.display = "none";
     document.body.offsetHeight;
     document.body.style.display = "";
-
-    if(isItComputer && isMqttConnected)
-        hiddenInput.focus();
 }
 
 
@@ -485,14 +482,18 @@ terminal.addEventListener("click", function() {
 
 
 document.addEventListener("click", function(event) {
-    if(isMqttConnected) return;
     if(!isItComputer) return;
     if(event.target.tagName === "INPUT" || event.target.tagName === "SELECT") return;
 
-    if(username.value)
-        password.focus();
-    else
-        username.focus();
+    if(isMqttConnected) {
+        if(window.getSelection().toString() && window.getSelection().anchorNode && terminal.contains(window.getSelection().anchorNode)) return;
+        hiddenInput.focus();
+    } else {
+        if(username.value)
+            password.focus();
+        else
+            username.focus();
+    }
 });
 
 
